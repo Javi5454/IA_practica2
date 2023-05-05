@@ -149,11 +149,84 @@ struct nodeN2
 
   bool operator<(const nodeN2 &n) const
   {
-    return (coste_acumulado > n.coste_acumulado); //Lo ponemos mayor para que lo use bien la priority_queue
+    return (coste_acumulado > n.coste_acumulado); // Lo ponemos mayor para que lo use bien la priority_queue
   }
 
-  bool operator>(const nodeN2 &n) const{
+  bool operator>(const nodeN2 &n) const
+  {
     return (coste_acumulado > n.coste_acumulado);
+  }
+};
+
+// Definicion de estado para el nivel 3
+struct stateN3
+{
+  ubicacion jugador;
+  ubicacion sonambulo;
+  bool bikini_j;
+  bool zapas_j;
+  bool bikini_s;
+  bool zapas_s;
+
+  bool operator==(const stateN3 &st) const
+  {
+    return (jugador == st.jugador && sonambulo == st.sonambulo && bikini_j == st.bikini_j && zapas_j == st.zapas_j && bikini_s == st.bikini_s && zapas_s == st.zapas_s);
+  }
+
+  bool operator<(const stateN3 &st) const
+  {
+    if (jugador.f < st.jugador.f)
+    {
+      return true;
+    }
+    else if (jugador.f == st.jugador.f && jugador.c < st.jugador.c)
+    {
+      return true;
+    }
+    else if (jugador.f == st.jugador.f && jugador.c == st.jugador.c && jugador.brujula < st.jugador.brujula)
+    {
+      return true;
+    }
+    else if (jugador.f == st.jugador.f && jugador.c == st.jugador.c && jugador.brujula == st.jugador.brujula && bikini_j < st.bikini_j)
+    {
+      return true;
+    }
+    else if (jugador.f == st.jugador.f && jugador.c == st.jugador.c && jugador.brujula == st.jugador.brujula && bikini_j == st.bikini_j && zapas_j < st.zapas_j)
+    {
+      return true;
+    }
+    else if (jugador.f == st.jugador.f && jugador.c == st.jugador.c && jugador.brujula == st.jugador.brujula && bikini_j == st.bikini_j && zapas_j == st.zapas_j && bikini_s < st.bikini_s)
+    {
+      return true;
+    }
+    else if (jugador.f == st.jugador.f && jugador.c == st.jugador.c && jugador.brujula == st.jugador.brujula && bikini_j == st.bikini_j && zapas_j == st.zapas_j && bikini_s == st.bikini_s && zapas_s < st.zapas_s)
+    {
+      return true;
+    }
+    else
+    {
+      return false;
+    }
+  }
+};
+
+// Nodo nivel 3
+struct nodeN3
+{
+  stateN3 st;
+  list<Action> secuencia;
+  int coste = 0;
+  int heuristica = 0;
+  int suma = 0;
+
+  bool operator==(const nodeN3 &n) const
+  {
+    return (st == n.st);
+  }
+
+  bool operator<(const nodeN3 &n)
+  {
+    return (suma > n.suma);
   }
 };
 
@@ -181,8 +254,11 @@ public:
   // Funcion para la busqueda en anchura del nivel 1
   list<Action> AnchuraSonambulo(const stateN0 &inicio, const ubicacion &final, const vector<vector<unsigned char>> &mapa);
 
-  // Funcion para la busqueda en profundidad del nivel 2
-  list<Action> ProfundidadSoloJugador(const stateN2 &inicio, const ubicacion &final, const vector<vector<unsigned char>> &mapa);
+  // Funcion para la busqueda en de Dijkstra del nivel 2
+  list<Action> DijkstraSoloJugador(const stateN2 &inicio, const ubicacion &final, const vector<vector<unsigned char>> &mapa);
+
+  // Funcion para la búsqueda A* del nivel 3
+  list<Action> AEstrellaSonambulo(const stateN3 &inicio, const ubicacion &final, const vector<vector<unsigned char>> &mapa);
 
 private:
   // Declarar Variables de Estado
@@ -203,6 +279,9 @@ private:
   // Devuelve el estado de aplicar a un estado una determinada accion en el nivel 2
   stateN2 apply(const Action &a, const stateN2 &st, const vector<vector<unsigned char>> &mapa);
 
+  // Devuelve el estado de aplicar a un estado una determinada accion en el nivel 3
+  stateN3 apply(const Action &a, const stateN3 &st, const vector<vector<unsigned char>> &mapa);
+
   // Encuentra si el elemento item está en la lista
   bool Find(const stateN0 &item, const list<stateN0> &lista);
   bool Find(const stateN0 &item, const list<nodeN0> &lista);
@@ -215,9 +294,11 @@ private:
 
   // Indica si el sonámbulo está en nuestro rango de visión
   bool VeoSonambulo(const stateN0 &st);
+  bool VeoSonambulo(const stateN3 &st);
 
-  // Nos permite calcular el coste de una accion en el nivel 2
+  // Nos permite calcular el coste de una accion en el nivel 2 y 3
   int CalcularCoste(const Action &a, const stateN2 &st, const vector<vector<unsigned char>> &mapa);
+  int CalcularCoste(const Action &a, const stateN3 &st, const vector<vector<unsigned char>> &mapa);
 };
 
 #endif

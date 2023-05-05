@@ -66,7 +66,7 @@ Action ComportamientoJugador::think(Sensores sensores)
 					state2.zapatillas = false;
 				}
 
-				plan = ProfundidadSoloJugador(state2, goal, mapaResultado);
+				plan = DijkstraSoloJugador(state2, goal, mapaResultado);
 				break;
 
 			default:
@@ -293,7 +293,7 @@ list<Action> ComportamientoJugador::AnchuraSonambulo(const stateN0 &inicio, cons
 	return plan;
 }
 
-list<Action> ComportamientoJugador::ProfundidadSoloJugador(const stateN2 &inicio, const ubicacion &final, const vector<vector<unsigned char>> &mapa)
+list<Action> ComportamientoJugador::DijkstraSoloJugador(const stateN2 &inicio, const ubicacion &final, const vector<vector<unsigned char>> &mapa)
 {
 	nodeN2 current_node;			 // Nodo actual
 	priority_queue<nodeN2> frontier; // Ahora la lista de abiertos es una cola de prioridad
@@ -376,6 +376,41 @@ list<Action> ComportamientoJugador::ProfundidadSoloJugador(const stateN2 &inicio
 	}
 
 	return plan;
+}
+
+list<Action> ComportamientoJugador::AEstrellaSonambulo(const stateN3 &inicio, const ubicacion &final, const vector<vector<unsigned char>> &mapa)
+{
+	nodeN3 current_node;			 // Nodo actual
+	priority_queue<nodeN3> frontier; // En esta ocasion tenemos una cola de prioridad
+	set<stateN3> explored;			 // Volvemos a tener un set de estados no de nodos
+	list<Action> plan;
+	current_node.st = inicio;
+	int coste, heuristica;
+
+	// Ahora la solucion es que el sonambulo llegue al objetivo
+	bool solutionFound = (current_node.st.sonambulo.f == final.f && current_node.st.sonambulo.c == final.c);
+	frontier.push(current_node);
+
+	// Comenzamos la busqueda
+	while (!frontier.empty() && !solutionFound)
+	{
+		// Metemos ahora el nodo en cerrados pues lo estamos explorando
+		frontier.pop();
+		explored.insert(current_node.st);
+
+		// Comenzamos a expandir el nodo
+
+		// Sonambulo
+		if (VeoSonambulo(current_node.st))
+		{
+			// Generamos hijo actSON_FORWARD
+			nodeN3 child_son_forward = current_node;
+
+			coste = CalcularCoste(actSON_FORWARD, current_node.st, mapa);
+
+			child_son_forward.st = apply(actSON_FORWARD, current_node.st, mapa);
+		}
+	}
 }
 
 bool ComportamientoJugador::CasillaTransitable(const ubicacion &x, const vector<vector<unsigned char>> &mapa)
@@ -513,6 +548,48 @@ stateN2 ComportamientoJugador::apply(const Action &a, const stateN2 &st, const v
 	}
 
 	return st_result;
+}
+
+stateN3 ComportamientoJugador::apply(const Action &a, const stateN3 &st, const vector<vector<unsigned char>> &mapa)
+{
+	stateN3 st_result = st;
+	ubicacion siguiente_ubicacion;
+
+	switch (a)
+	{
+	case actFORWARD:
+		siguiente_ubicacion = NextCasilla(st.jugador);
+		if (CasillaTransitable(siguiente_ubicacion, mapa) && !(siguiente_ubicacion.f == st.sonambulo.f && siguiente_ubicacion.c == st.sonambulo.c))
+		{
+			st_result.jugador = siguiente_ubicacion;
+
+			if (mapa[siguiente_ubicacion.f][siguiente_ubicacion.c] == 'K')
+			{ // Conseguimos un bikini para el jugador
+				st_result.bikini_j = true;
+				st_result.zapas_j = false;
+			}
+			else if (mapa[siguiente_ubicacion.f][siguiente_ubicacion.c] == 'D')
+			{ // Conseguimos unas zapas para el jugador
+				st_result.bikini_j = false;
+				st_result.zapas_j = true;
+			}
+		}
+		break;
+
+	case actTURN_L:
+		st_result.jugador.brujula = static_cast<Orientacion>((st_result.jugador.brujula + 6) % 8);
+		break;
+
+	case actTURN_R:
+		st_result.jugador.brujula = static_cast<Orientacion>((st_result.jugador.brujula + 2) % 8);
+		break;
+
+	//Movimientos del sonambulo
+	case actSON_FORWARD:
+
+	default:
+		break;
+	}
 }
 
 bool ComportamientoJugador::Find(const stateN0 &item, const list<stateN0> &lista)
@@ -764,6 +841,178 @@ bool ComportamientoJugador::VeoSonambulo(const stateN0 &st)
 	return false;
 }
 
+bool ComportamientoJugador::VeoSonambulo(const stateN3 &st)
+{
+	switch (st.jugador.brujula)
+	{
+	case norte:
+		for (int i = 1; i < 4; i++)
+		{
+			if (st.jugador.f - i == st.sonambulo.f)
+			{
+				switch (i)
+				{
+				case 1:
+					for (int j = -1; j < 2; j++)
+					{
+						if (st.jugador.c + j == st.sonambulo.c)
+						{
+							return true;
+						}
+					}
+					break;
+
+				case 2:
+					for (int j = -2; j < 3; j++)
+					{
+						if (st.jugador.c + j == st.sonambulo.c)
+						{
+							return true;
+						}
+					}
+					break;
+
+				case 3:
+					for (int j = -3; j < 4; j++)
+					{
+						if (st.jugador.c + j == st.sonambulo.c)
+						{
+							return true;
+						}
+					}
+					break;
+				}
+			}
+		}
+		break;
+
+	case este:
+		for (int i = 1; i < 4; i++)
+		{
+			if (st.jugador.c + i == st.sonambulo.c)
+			{
+				switch (i)
+				{
+				case 1:
+					for (int j = -1; j < 2; j++)
+					{
+						if (st.jugador.f + j == st.sonambulo.f)
+						{
+							return true;
+						}
+					}
+					break;
+
+				case 2:
+					for (int j = -2; j < 3; j++)
+					{
+						if (st.jugador.f + j == st.sonambulo.f)
+						{
+							return true;
+						}
+					}
+					break;
+
+				case 3:
+					for (int j = -3; j < 4; j++)
+					{
+						if (st.jugador.f + j == st.sonambulo.f)
+						{
+							return true;
+						}
+					}
+					break;
+				}
+			}
+		}
+		break;
+
+	case sur:
+		for (int i = 1; i < 4; i++)
+		{
+			if (st.jugador.f + i == st.sonambulo.f)
+			{
+				switch (i)
+				{
+				case 1:
+					for (int j = -1; j < 2; j++)
+					{
+						if (st.jugador.c + j == st.sonambulo.c)
+						{
+							return true;
+						}
+					}
+					break;
+
+				case 2:
+					for (int j = -2; j < 3; j++)
+					{
+						if (st.jugador.c + j == st.sonambulo.c)
+						{
+							return true;
+						}
+					}
+					break;
+
+				case 3:
+					for (int j = -3; j < 4; j++)
+					{
+						if (st.jugador.c + j == st.sonambulo.c)
+						{
+							return true;
+						}
+					}
+					break;
+				}
+			}
+		}
+		break;
+
+	case oeste:
+		for (int i = 1; i < 4; i++)
+		{
+			if (st.jugador.c - i == st.jugador.c)
+			{
+				switch (i)
+				{
+				case 1:
+					for (int j = -1; j < 2; j++)
+					{
+						if (st.jugador.f + j == st.sonambulo.f)
+						{
+							return true;
+						}
+					}
+					break;
+
+				case 2:
+					for (int j = -2; j < 3; j++)
+					{
+						if (st.jugador.f + j == st.sonambulo.f)
+						{
+							return true;
+						}
+					}
+					break;
+
+				case 3:
+					for (int j = -3; j < 4; j++)
+					{
+						if (st.jugador.f + j == st.sonambulo.f)
+						{
+							return true;
+						}
+					}
+					break;
+				}
+			}
+		}
+		break;
+	}
+
+	return false;
+}
+
 int ComportamientoJugador::CalcularCoste(const Action &a, const stateN2 &st, const vector<vector<unsigned char>> &mapa)
 {
 	char casilla = mapa[st.jugador.f][st.jugador.c];
@@ -836,5 +1085,143 @@ int ComportamientoJugador::CalcularCoste(const Action &a, const stateN2 &st, con
 			return 1;
 		}
 		break;
+	}
+}
+
+int ComportamientoJugador::CalcularCoste(const Action &a, const stateN3 &st, const vector<vector<unsigned char>> &mapa)
+{
+	char casilla = mapa[st.jugador.f][st.jugador.c];
+
+	switch (a)
+	{
+	case actFORWARD:
+		if (casilla == 'A')
+		{ // Estamos en agua
+			if (st.bikini_j)
+			{
+				return 10;
+			}
+			else
+			{
+				return 100;
+			}
+		}
+		else if (casilla == 'B')
+		{ // Estamos en bosque
+			if (st.zapas_j)
+			{
+				return 15;
+			}
+			else
+			{
+				return 50;
+			}
+		}
+		else if (casilla == 'T')
+		{ // Terreno
+			return 2;
+		}
+		else
+		{
+			return 1;
+		}
+		break;
+
+	case actTURN_L:
+	case actTURN_R:
+		if (casilla == 'A')
+		{ // Estamos en agua
+			if (st.bikini_j)
+			{
+				return 5;
+			}
+			else
+			{
+				return 25;
+			}
+		}
+		else if (casilla == 'B')
+		{ // Estamos en bosque
+			if (st.zapas_j)
+			{
+				return 1;
+			}
+			else
+			{
+				return 5;
+			}
+		}
+		else if (casilla == 'T')
+		{
+			return 2;
+		}
+		else
+		{
+			return 1;
+		}
+		break;
+
+	case actSON_FORWARD:
+		if (casilla == 'A')
+		{ // Estamos en agua
+			if (st.bikini_s)
+			{
+				return 10;
+			}
+			else
+			{
+				return 100;
+			}
+		}
+		else if (casilla == 'B')
+		{ // Estamos en bosque
+			if (st.zapas_s)
+			{
+				return 15;
+			}
+			else
+			{
+				return 50;
+			}
+		}
+		else if (casilla == 'T')
+		{
+			return 2;
+		}
+		else
+		{
+			return 1;
+		}
+
+		break;
+
+	case actSON_TURN_SL:
+	case actSON_TURN_SR:
+		if (casilla == 'A')
+		{ // Estamos en agua
+			if (st.bikini_s)
+			{
+				return 2;
+			}
+			else
+			{
+				return 7;
+			}
+		}
+		else if (casilla == 'B')
+		{ // Estamos en bosque
+			if (st.zapas_s)
+			{
+				return 1;
+			}
+			else
+			{
+				return 3;
+			}
+		}
+		else
+		{
+			return 1;
+		}
 	}
 }
