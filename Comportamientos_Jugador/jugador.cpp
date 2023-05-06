@@ -69,7 +69,44 @@ Action ComportamientoJugador::think(Sensores sensores)
 				plan = DijkstraSoloJugador(state2, goal, mapaResultado);
 				break;
 
-			default:
+			case 3:
+				stateN3 state3;
+				state3.jugador = jugador;
+				state3.sonambulo = sonambulo;
+
+				if (mapaResultado[jugador.f][jugador.c] == 'K')
+				{
+					state3.bikini_j = true;
+					state3.zapas_j = false;
+				}
+				else if (mapaResultado[jugador.f][jugador.c] == 'D')
+				{
+					state3.bikini_j = false;
+					state3.zapas_j = true;
+				}
+				else
+				{
+					state3.bikini_j = false;
+					state3.zapas_j = false;
+				}
+
+				if (mapaResultado[sonambulo.f][sonambulo.c] == 'K')
+				{
+					state3.bikini_s = true;
+					state3.zapas_s = false;
+				}
+				else if (mapaResultado[sonambulo.f][sonambulo.c] == 'D')
+				{
+					state3.bikini_s = false;
+					state3.zapas_s = true;
+				}
+				else
+				{
+					state3.bikini_s = false;
+					state3.zapas_s = false;
+				}
+
+				plan = AEstrellaSonambulo(state3, goal, mapaResultado);
 				break;
 			}
 
@@ -406,11 +443,179 @@ list<Action> ComportamientoJugador::AEstrellaSonambulo(const stateN3 &inicio, co
 			// Generamos hijo actSON_FORWARD
 			nodeN3 child_son_forward = current_node;
 
-			coste = CalcularCoste(actSON_FORWARD, current_node.st, mapa);
+			coste = CalcularCoste(actSON_FORWARD, current_node.st, mapa, 'S');
+
+			/*if (mapa[current_node.st.sonambulo.f][current_node.st.sonambulo.c] == 'B')
+			{
+				cout << "Estoy en bosque" << endl;
+				cout << "Tengo zapas ";
+				coste = CalcularCoste(actSON_FORWARD, current_node.st, mapa, 'S');
+				if (current_node.st.zapas_s)
+				{
+					cout << "Si" << endl;
+				}
+				else
+				{
+					cout << "No" << endl;
+				}
+				cout << "Coste: " << coste << endl;
+			}*/
 
 			child_son_forward.st = apply(actSON_FORWARD, current_node.st, mapa);
+
+			if (explored.find(child_son_forward.st) == explored.end())
+			{
+				child_son_forward.secuencia.push_back(actSON_FORWARD);
+				child_son_forward.coste += coste;
+
+				child_son_forward.heuristica = distanciaChebyshev(child_son_forward.st.sonambulo, final); // No acumulamos
+
+				child_son_forward.suma = child_son_forward.coste + child_son_forward.heuristica;
+
+				frontier.push(child_son_forward);
+			}
+
+			// Generamos hijo actSON_TURN_SL
+			nodeN3 child_son_turnsl = current_node;
+
+			coste = CalcularCoste(actSON_TURN_SL, current_node.st, mapa, 'S');
+
+			child_son_turnsl.st = apply(actSON_TURN_SL, current_node.st, mapa);
+
+			if (explored.find(child_son_turnsl.st) == explored.end())
+			{
+				child_son_turnsl.secuencia.push_back(actSON_TURN_SL);
+				child_son_turnsl.coste += coste;
+
+				child_son_turnsl.heuristica = distanciaChebyshev(child_son_turnsl.st.sonambulo, final);
+
+				child_son_turnsl.suma = child_son_turnsl.coste + child_son_turnsl.heuristica;
+
+				frontier.push(child_son_turnsl);
+			}
+
+			// Generamos hijo actSON_TURN_SR
+
+			nodeN3 child_son_turnsr = current_node;
+
+			coste = CalcularCoste(actSON_TURN_SR, current_node.st, mapa, 'S');
+
+			child_son_turnsr.st = apply(actSON_TURN_SR, current_node.st, mapa);
+
+			if (explored.find(child_son_turnsr.st) == explored.end())
+			{
+				child_son_turnsr.secuencia.push_back(actSON_TURN_SR);
+				child_son_turnsr.coste += coste;
+
+				child_son_turnsr.heuristica = distanciaChebyshev(child_son_turnsr.st.sonambulo, final);
+
+				child_son_turnsr.suma = child_son_turnsr.coste + child_son_turnsr.heuristica;
+
+				frontier.push(child_son_turnsr);
+			}
+		}
+
+		// Acciones del jugador
+
+		// Generamos hijo actFORWARD
+		nodeN3 child_forward = current_node;
+
+		coste = CalcularCoste(actFORWARD, current_node.st, mapa, 'J');
+
+		/*if(mapa[current_node.st.jugador.f][current_node.st.jugador.c] == 'A'){
+			cout << "Estoy en agua" << endl;
+			cout << "Tengo bikini: ";
+
+			if(current_node.st.bikini_j){
+				cout << "True" << endl;
+			}
+			else{
+				cout << "False" << endl;
+			}
+
+			cout << "Coste: " << coste << endl;
+		}*/
+
+		child_forward.st = apply(actFORWARD, current_node.st, mapa);
+
+		if (explored.find(child_forward.st) == explored.end())
+		{
+			child_forward.secuencia.push_back(actFORWARD);
+			child_forward.coste += coste;
+
+			child_forward.heuristica = distanciaChebyshev(child_forward.st.sonambulo, final);
+
+			child_forward.suma = child_forward.coste + child_forward.heuristica;
+
+			frontier.push(child_forward);
+		}
+
+		// Generamos hijo actTURN_L
+		nodeN3 child_turnl = current_node;
+
+		coste = CalcularCoste(actTURN_L, current_node.st, mapa, 'J');
+
+		child_turnl.st = apply(actTURN_L, current_node.st, mapa);
+
+		if (explored.find(child_turnl.st) == explored.end())
+		{
+			child_turnl.secuencia.push_back(actTURN_L);
+			child_turnl.coste += coste;
+
+			child_turnl.heuristica = distanciaChebyshev(child_turnl.st.sonambulo, final);
+
+			child_turnl.suma = child_turnl.coste + child_turnl.heuristica;
+
+			frontier.push(child_turnl);
+		}
+
+		// Generamos hijo actTURN_R
+		nodeN3 child_turnr = current_node;
+
+		coste = CalcularCoste(actTURN_R, current_node.st, mapa, 'J');
+
+		child_turnr.st = apply(actTURN_R, current_node.st, mapa);
+
+		if (explored.find(child_turnr.st) == explored.end())
+		{
+			child_turnr.secuencia.push_back(actTURN_R);
+			child_turnr.coste += coste;
+
+			child_turnr.heuristica = distanciaChebyshev(child_turnr.st.sonambulo, final);
+
+			child_turnr.suma = child_turnr.coste + child_turnr.heuristica;
+
+			frontier.push(child_turnr);
+		}
+
+		// COMPROBAMOS SI ES SOLUCION
+		if (!frontier.empty())
+		{
+			current_node = frontier.top();
+			while (!frontier.empty() && explored.find(current_node.st) != explored.end())
+			{
+				frontier.pop();
+
+				if (!frontier.empty())
+				{
+					current_node = frontier.top();
+				}
+			}
+
+			if (current_node.st.sonambulo.f == final.f && current_node.st.sonambulo.c == final.c)
+			{
+				explored.insert(current_node.st);
+				solutionFound = true;
+			}
 		}
 	}
+
+	if (solutionFound)
+	{
+		plan = current_node.secuencia;
+	}
+
+	return plan;
 }
 
 bool ComportamientoJugador::CasillaTransitable(const ubicacion &x, const vector<vector<unsigned char>> &mapa)
@@ -584,12 +789,37 @@ stateN3 ComportamientoJugador::apply(const Action &a, const stateN3 &st, const v
 		st_result.jugador.brujula = static_cast<Orientacion>((st_result.jugador.brujula + 2) % 8);
 		break;
 
-	//Movimientos del sonambulo
+	// Movimientos del sonambulo
 	case actSON_FORWARD:
+		siguiente_ubicacion = NextCasilla(st.sonambulo);
+		if (CasillaTransitable(siguiente_ubicacion, mapa) && !(siguiente_ubicacion.f == st.jugador.f && siguiente_ubicacion.c == st.jugador.c))
+		{
+			st_result.sonambulo = siguiente_ubicacion;
 
-	default:
+			if (mapa[siguiente_ubicacion.f][siguiente_ubicacion.c] == 'K')
+			{ // Conseguimos un bikini para el sonambulo
+				st_result.bikini_s = true;
+				st_result.zapas_s = false;
+			}
+			else if (mapa[siguiente_ubicacion.f][siguiente_ubicacion.c] == 'D')
+			{ // Conseguimos unas zapas para el sonambulo
+				st_result.bikini_s = false;
+				st_result.zapas_s = true;
+			}
+		}
+
+		break;
+
+	case actSON_TURN_SL:
+		st_result.sonambulo.brujula = static_cast<Orientacion>((st_result.sonambulo.brujula + 7) % 8);
+		break;
+
+	case actSON_TURN_SR:
+		st_result.sonambulo.brujula = static_cast<Orientacion>((st_result.sonambulo.brujula + 1) % 8);
 		break;
 	}
+
+	return st_result;
 }
 
 bool ComportamientoJugador::Find(const stateN0 &item, const list<stateN0> &lista)
@@ -1088,9 +1318,19 @@ int ComportamientoJugador::CalcularCoste(const Action &a, const stateN2 &st, con
 	}
 }
 
-int ComportamientoJugador::CalcularCoste(const Action &a, const stateN3 &st, const vector<vector<unsigned char>> &mapa)
+int ComportamientoJugador::CalcularCoste(const Action &a, const stateN3 &st, const vector<vector<unsigned char>> &mapa, const unsigned char tipo)
 {
-	char casilla = mapa[st.jugador.f][st.jugador.c];
+
+	char casilla;
+
+	if (tipo == 'J')
+	{
+		casilla = mapa[st.jugador.f][st.jugador.c];
+	}
+	else
+	{
+		casilla = mapa[st.sonambulo.f][st.sonambulo.c];
+	}
 
 	switch (a)
 	{
@@ -1223,5 +1463,20 @@ int ComportamientoJugador::CalcularCoste(const Action &a, const stateN3 &st, con
 		{
 			return 1;
 		}
+	}
+}
+
+int ComportamientoJugador::distanciaChebyshev(const ubicacion &inicio, const ubicacion &final)
+{
+	int x = abs(inicio.c - final.c);
+	int y = abs(inicio.f - final.f);
+
+	if (y > x)
+	{
+		return y;
+	}
+	else
+	{
+		return x;
 	}
 }

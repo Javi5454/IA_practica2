@@ -1,7 +1,7 @@
 #ifndef COMPORTAMIENTOJUGADOR_H
 #define COMPORTAMIENTOJUGADOR_H
 
-#include "comportamientos/comportamiento.hpp"
+#include "../include/comportamientos/comportamiento.hpp"
 
 #include <list>
 
@@ -203,6 +203,18 @@ struct stateN3
     {
       return true;
     }
+    else if (jugador.f == st.jugador.f && jugador.c == st.jugador.c && jugador.brujula == st.jugador.brujula && bikini_j == st.bikini_j && zapas_j == st.zapas_j && bikini_s == st.bikini_s && zapas_s == st.zapas_s && sonambulo.f < st.sonambulo.f)
+    {
+      return true;
+    }
+    else if (jugador.f == st.jugador.f && jugador.c == st.jugador.c && jugador.brujula == st.jugador.brujula && bikini_j == st.bikini_j && zapas_j == st.zapas_j && bikini_s == st.bikini_s && zapas_s == st.zapas_s && sonambulo.f == st.sonambulo.f && sonambulo.c < st.sonambulo.c)
+    {
+      return true;
+    }
+    else if (jugador.f == st.jugador.f && jugador.c == st.jugador.c && jugador.brujula == st.jugador.brujula && bikini_j == st.bikini_j && zapas_j == st.zapas_j && bikini_s == st.bikini_s && zapas_s == st.zapas_s && sonambulo.f == st.sonambulo.f && sonambulo.c == st.sonambulo.c && sonambulo.brujula < st.sonambulo.brujula)
+    {
+      return true;
+    }
     else
     {
       return false;
@@ -224,7 +236,7 @@ struct nodeN3
     return (st == n.st);
   }
 
-  bool operator<(const nodeN3 &n)
+  bool operator<(const nodeN3 &n) const
   {
     return (suma > n.suma);
   }
@@ -298,7 +310,10 @@ private:
 
   // Nos permite calcular el coste de una accion en el nivel 2 y 3
   int CalcularCoste(const Action &a, const stateN2 &st, const vector<vector<unsigned char>> &mapa);
-  int CalcularCoste(const Action &a, const stateN3 &st, const vector<vector<unsigned char>> &mapa);
+  int CalcularCoste(const Action &a, const stateN3 &st, const vector<vector<unsigned char>> &mapa, const unsigned char tipo);
+
+  // Heurística para nuestro algoritmo de A* para el agente sonámbulo
+  int distanciaChebyshev(const ubicacion &inicio, const ubicacion &final);
 };
 
 #endif
