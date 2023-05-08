@@ -107,6 +107,15 @@ Action ComportamientoJugador::think(Sensores sensores)
 				}
 
 				plan = AEstrellaSonambulo(state3, goal, mapaResultado);
+
+				/*cout << "Veo al sonambulo: ";
+
+				if(VeoSonambulo(state3)){
+					cout << "Si" << endl;
+				}
+				else{
+					cout << "No" << endl;
+				}*/
 				break;
 			}
 
@@ -1201,7 +1210,7 @@ bool ComportamientoJugador::VeoSonambulo(const stateN3 &st)
 	case oeste:
 		for (int i = 1; i < 4; i++)
 		{
-			if (st.jugador.c - i == st.jugador.c)
+			if (st.jugador.c - i == st.sonambulo.c)
 			{
 				switch (i)
 				{
