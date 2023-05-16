@@ -130,6 +130,23 @@ Action ComportamientoJugador::think(Sensores sensores)
 		if (hayPlan && plan.size() > 0)
 		{
 			cout << "Ejecutando la siguiente acción del plan" << endl;
+
+			if(sensores.nivel == 1){
+				stateN0 st;
+				st.jugador.f = sensores.posF;
+				st.jugador.c = sensores.posC;
+				st.jugador.brujula = sensores.sentido;
+				st.sonambulo.f = sensores.SONposF;
+				st.sonambulo.c = sensores.SONposC;
+				st.sonambulo.brujula = sensores.SONsentido;
+
+				if(VeoSonambulo(st)){
+					cout << "Veo sonámbulo" << endl;
+				}
+				else{
+					cout << "No veo sonambulo" << endl;
+				}
+			}
 			accion = plan.front();
 			plan.pop_front();
 		}
@@ -454,22 +471,6 @@ list<Action> ComportamientoJugador::AEstrellaSonambulo(const stateN3 &inicio, co
 
 			coste = CalcularCoste(actSON_FORWARD, current_node.st, mapa, 'S');
 
-			/*if (mapa[current_node.st.sonambulo.f][current_node.st.sonambulo.c] == 'B')
-			{
-				cout << "Estoy en bosque" << endl;
-				cout << "Tengo zapas ";
-				coste = CalcularCoste(actSON_FORWARD, current_node.st, mapa, 'S');
-				if (current_node.st.zapas_s)
-				{
-					cout << "Si" << endl;
-				}
-				else
-				{
-					cout << "No" << endl;
-				}
-				cout << "Coste: " << coste << endl;
-			}*/
-
 			child_son_forward.st = apply(actSON_FORWARD, current_node.st, mapa);
 
 			if (explored.find(child_son_forward.st) == explored.end())
@@ -530,20 +531,6 @@ list<Action> ComportamientoJugador::AEstrellaSonambulo(const stateN3 &inicio, co
 		nodeN3 child_forward = current_node;
 
 		coste = CalcularCoste(actFORWARD, current_node.st, mapa, 'J');
-
-		/*if(mapa[current_node.st.jugador.f][current_node.st.jugador.c] == 'A'){
-			cout << "Estoy en agua" << endl;
-			cout << "Tengo bikini: ";
-
-			if(current_node.st.bikini_j){
-				cout << "True" << endl;
-			}
-			else{
-				cout << "False" << endl;
-			}
-
-			cout << "Coste: " << coste << endl;
-		}*/
 
 		child_forward.st = apply(actFORWARD, current_node.st, mapa);
 
@@ -1038,7 +1025,7 @@ bool ComportamientoJugador::VeoSonambulo(const stateN0 &st)
 	case oeste:
 		for (int i = 1; i < 4; i++)
 		{
-			if (st.jugador.c - i == st.jugador.c)
+			if (st.jugador.c - i == st.sonambulo.c)
 			{
 				switch (i)
 				{
